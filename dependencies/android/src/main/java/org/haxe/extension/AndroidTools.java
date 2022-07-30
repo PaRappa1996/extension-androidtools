@@ -101,15 +101,6 @@ public class AndroidTools extends Extension {
 			Log.e("AndroidTools", e.toString());
 		}
 	}
-
-	public static String objectToJson(Object obj){
-		try {
-		return gson.toJson(obj);
-		}catch (Exception e){
-			Log.d("AndroidTools", e.toString());
-			return "{}";
-		}
-	}
 	
 	public static int getSDKversion(){
 		return Build.VERSION.SDK_INT;
