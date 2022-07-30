@@ -1,4 +1,4 @@
-papackage android;
+package android;
 
 import lime.system.JNI;
 
