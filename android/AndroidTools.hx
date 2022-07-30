@@ -47,6 +47,10 @@ class AndroidTools {
 		var getFileUrl_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "getFileUrl", "(Ljava/lang/String;)Ljava/lang/String;");
 		return getFileUrl_jni(path);
 	}
+	public static function getSDKversion():Int {
+		var getSDKversion_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "getSDKversion", "()I");
+		return getSDKversion_jni();
+	}
 	#end
 }
 
