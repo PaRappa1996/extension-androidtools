@@ -1,4 +1,4 @@
-ackage android;
+package android;
 
 #if android
 import lime.system.JNI;
