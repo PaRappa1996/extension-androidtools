@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Build;
 
-import com.google.gson.Gson;
 import org.haxe.lime.HaxeObject;
 
 import java.util.ArrayList;
@@ -49,7 +48,6 @@ import java.io.File;
 	back to Haxe from Java.
 */
 public class AndroidTools extends Extension {
-	public static Gson gson = new Gson();
 
 	public static HaxeObject callback;
 
