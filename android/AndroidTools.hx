@@ -1,81 +1,116 @@
-package android;
+ackage android;
 
+#if android
 import lime.system.JNI;
+import haxe.Json;
+import haxe.Constraints.Function;
+import android.stuff.*;
+#end
 
 class AndroidTools {
-
+	#if android
 	public static var callback = new CallbackHelper();
 
+	public static var sdkVersion:Int = JNI.createStaticField("android/os/Build$VERSION", "SDK_INT", "I").get();
+
 	public static function requestPermission(perm:Permissions = Permissions.READ_EXTERNAL_STORAGE) {
-		#if android
+		var request_permissions_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "requestPermissions", "([Ljava/lang/String;I)V");
 		request_permissions_jni([perm], 1);
-		#end
 	}
 
 	public static function requestPermissions(perm:Array<Permissions>) {
-		#if android
+		var request_permissions_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "requestPermissions", "([Ljava/lang/String;I)V");
 		request_permissions_jni(perm, 1);
-		#end
 	}
 
 	public static function getGrantedPermissions():Array<Permissions> {
-		#if android
+		var getGrantedPermissions_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "getGrantedPermissions", "()[Ljava/lang/String;");
 		return getGrantedPermissions_jni();
-		#end
-		return null;
+	}
+
+	public static function getExternalStorageDirectory():String {
+		var getExternalStorageDirectory_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "getExternalStorageDirectory", "()Ljava/lang/String;");
+		return getExternalStorageDirectory_jni();
 	}
 
 	public static function openFileManager(dir:String, title:String = "select a file", type:String = "*/*", action:Intent = Intent.ACTION_GET_CONTENT, reqcode:Int = 0) {
-		#if android
+		var openFileManager_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "openFileManager", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 		return openFileManager_jni(action, dir, type, title, reqcode);
-		#end
-		return null;
 	}
 
-	public static function makeToast(text:String) {
-		#if android
-		return toast_jni(text);
-		#end
-		return null;
-	}
-
-	// the best thing ever!!!
-	public static function getExternalStorageDirectory():String {
-		#if android
-		return getExternalStorageDirectory_jni();
-		#end
-		return null;
-	}
-
-	// app settings
-	public static function goToSettings() {
-		#if android
-		return goToSettings_jni();
-		#end
-		return null;
-	}
-	
-	public static function getSDKversion():Int {
-		#if android
-		return getSDKversion_jni();
-		#end
-		return 0;
+	public static function appSettings(set:Settings = Settings.ACTION_APPLICATION_DETAILS_SETTINGS, reqcode:Int = 0) {
+		var appSettings_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "appSettings", "(Ljava/lang/String;I)V");
+		return appSettings_jni(set, reqcode);
 	}
 
 	public static function getFileUrl(path:String):String {
-		#if android
+		var getFileUrl_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "getFileUrl", "(Ljava/lang/String;)Ljava/lang/String;");
 		return getFileUrl_jni(path);
-                #end
 	}
-
-	#if android
-	private static var request_permissions_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "requestPermissions", "([Ljava/lang/String;I)V");
-	private static var getGrantedPermissions_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "getGrantedPermissions", "()[Ljava/lang/String;");
-	private static var openFileManager_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "openFileManager", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-	private static var toast_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "toast", "(Ljava/lang/String;)V");
-	private static var getExternalStorageDirectory_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "getExternalStorageDirectory", "()Ljava/lang/String;");
-	private static var goToSettings_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "goToSettings", "()V");
-	private static var getSDKversion_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "getSDKversion", "()I");
-        private static var getFileUrl_jni = JNI.createStaticMethod("org.haxe.extension.AndroidTools", "getFileUrl", "(Ljava/lang/String;)Ljava/lang/String;");
 	#end
-	}
+}
+
+class CallbackHelper {
+    public var listener:Map<String, Array<Function>>;
+    
+    public function new() {
+        listener = new Map();
+        listener.set(ExtensionEvent.onActivityResult, new Array());
+        listener.set(ExtensionEvent.onRequestPermissionsResult, new Array());
+
+        #if android
+        setCallback_jni(this);
+        #end
+    }
+
+    public function onActivityResult(requestCode:Int, resultCode:Int, ?data:Dynamic){
+        for (func in listener.get(ExtensionEvent.onActivityResult)){
+            func(requestCode, resultCode, new JavaObject(data));
+        }
+    }
+    public function onRequestPermissionsResult(requestCode:Int, permissions:Array<Permissions>, grantResults:Array<Int>){
+        for (func in listener.get(ExtensionEvent.onRequestPermissionsResult)){
+            func(requestCode, permissions, grantResults);
+        }
+    }
+
+    public function addEventListener(event:ExtensionEvent, func:Function){
+        listener.get(event).push(func);
+    }
+
+    public function removeEventListener(event:ExtensionEvent, func:Function){
+        listener.get(event).remove(func);
+    }
+
+    #if android
+    private static var setCallback_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "setCallback", "(Lorg/haxe/lime/HaxeObject;)V");
+    #end
+}
+
+class JavaObject {
+    
+    @:noCompletion public var jobject:Dynamic;
+    public var data:Dynamic;
+
+    public function new(obj:Dynamic){
+        jobject = obj;
+        #if android
+        data = Json.parse(objectToJson_jni(obj)); // dont working for now
+        #end
+    }
+
+    public function compare(jobj:Dynamic){
+        if (Std.isOfType(jobj, JavaObject))
+            return untyped this.jobject == untyped jobj.jobject;
+        return untyped this.jobject == untyped jobj;
+    }
+
+    #if android
+    private static var objectToJson_jni = JNI.createStaticMethod("org.haxe.extension.Tools", "objectToJson", "(Ljava/lang/Object;)Ljava/lang/String;");
+    #end
+}
+
+enum abstract ExtensionEvent(String) from String to String {
+    var onActivityResult = 'onActivityResult';
+    var onRequestPermissionsResult = 'onRequestPermissionsResult';
+}
