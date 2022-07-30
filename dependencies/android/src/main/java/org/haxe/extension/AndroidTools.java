@@ -104,7 +104,7 @@ public class AndroidTools extends Extension {
 
 	public static String objectToJson(Object obj){
 		try {
-			return gson.toJson(obj);
+		return gson.toJson(obj);
 		}catch (Exception e){
 			Log.d("AndroidTools", e.toString());
 			return "{}";
