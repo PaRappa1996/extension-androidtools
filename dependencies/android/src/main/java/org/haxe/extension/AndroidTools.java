@@ -62,21 +62,11 @@ public class AndroidTools extends Extension {
 	}
 
 	public static String getExternalStorageDirectory(){
-		try {
-			return Environment.getExternalStorageDirectory().getPath();
-		}catch (Exception e){
-			Log.d("AndroidTools", e.toString());
-			return "";
-		}
+		return Environment.getExternalStorageDirectory().getPath();
 	}
 
 	public static String getFileUrl(String path){
-		try {		
-			return Uri.fromFile(new File(path)).toString();
-		}catch (Exception e){
-			Log.d("AndroidTools", e.toString());
-			return "";
-		}
+		return Uri.fromFile(new File(path)).toString();
 	}
 
 	public static String[] getGrantedPermissions(){
@@ -122,9 +112,17 @@ public class AndroidTools extends Extension {
 			return "{}";
 		}
 	}
+	
+	public static int getSDKversion(){
+		return Build.VERSION.SDK_INT;
+	}
 
 	public static void setCallback(final HaxeObject _callback){
 		callback = _callback;
+	}
+	
+	public static int sampleMethod(int inputValue){
+		return inputValue * 100;
 	}
 	
 	/**
