@@ -35,11 +35,12 @@ class Uri
 	 * Encodes all other characters.
 	 * 
 	 * @param s string to encode
+	 * @param allow set of additional characters to allow in the encoded form, null if no characters should be skipped
 	 */
-	public static function encode(s:String):String
+	public static function encode(s:String, allow:String):String
 	{
-		var encode_jni:Dynamic = JNI.createStaticMethod('android/net/Uri', 'encode', '(Ljava/lang/String;)Ljava/lang/String;');
-		return encode_jni(s);
+		var encode_jni:Dynamic = JNI.createStaticMethod('android/net/Uri', 'encode', '(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;');
+		return encode_jni(s, allow);
 	}
 
 	/**
@@ -50,7 +51,26 @@ class Uri
 	 */
 	public static function fromFile(path:String):String
 	{
-		var fromFile_jni:Dynamic = JNI.createStaticMethod('org/haxe/extension/Tools', 'fromFile', '(Ljava/lang/String;)Ljava/lang/String;');
-		return fromFile_jni(path);
+		var file_jni:Dynamic = JNI.createStaticMethod('java/io/File', '<init>', '(Ljava/lang/String;)V');
+		var fromFile_jni:Dynamic = JNI.createStaticMethod('android/net/Uri', 'fromFile', '(Ljava/io/File;)Landroid/net/Uri;');
+
+		var getStringFromUri_jni:Dynamic = JNI.createStaticMethod('org/haxe/extension/Tools', 'getStringFromUri', '(Landroid/net/Uri;)Ljava/lang/String;');
+		return getStringFromUri_jni(fromFile_jni(file_jni(path)));
+	}
+
+	/**
+	 * Creates an opaque Uri from the given components.
+	 * Encodes the ssp which means this method cannot be used to create hierarchical URIs.
+	 *
+	 * @param scheme
+	 * @param ssp
+	 * @param fragment
+	 */
+	public static function fromParts(scheme:String, ssp:String, fragment:String):String
+	{
+		var fromParts_jni:Dynamic = JNI.createStaticMethod('android/net/Uri', 'fromParts', '(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/net/Uri;');
+
+		var getStringFromUri_jni:Dynamic = JNI.createStaticMethod('org/haxe/extension/Tools', 'getStringFromUri', '(Landroid/net/Uri;)Ljava/lang/String;');
+		return getStringFromUri_jni(fromParts_jni(scheme, ssp, fragment));
 	}
 }

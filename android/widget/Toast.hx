@@ -17,15 +17,15 @@ import lime.system.JNI;
 @:access(lime.system.JNI)
 class Toast
 {
-	public static final LENGTH_SHORT = 0;
-	public static final LENGTH_LONG = 1;
+	public static final LENGTH_SHORT:Int = 0;
+	public static final LENGTH_LONG:Int = 1;
 
 	/**
 	 * Makes a toast text.
 	 */
 	public static function makeText(text:String, duration:Int):Void
 	{
-		var toast_jni:Dynamic = JNI.createStaticMethod('org/haxe/extension/Tools', 'toast', '(Ljava/lang/String;I)V');
-		toast_jni(text, duration);
+		var makeText_jni:Dynamic = JNI.createStaticMethod('org/haxe/extension/Tools', 'makeText', '(Ljava/lang/String;I)V');
+		makeText_jni(text, duration);
 	}
 }
