@@ -8,11 +8,6 @@ import lime.system.JNI;
 /**
  * @author Mihai Alexandru (M.A. Jigsaw)
  */
-#if !debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
-@:access(lime.system.JNI)
 class Permissions
 {
 	public static final ACCEPT_HANDOVER:String = 'android.permission.ACCEPT_HANDOVER';
@@ -241,7 +236,7 @@ class Permissions
 	 */
 	public static function requestPermissions(permissions:Array<String>, requestCode:Int = 1):Void
 	{
-		if (permissions == [] && permissions.length <= 0)
+		if (permissions.length <= 0)
 			return;
 
 		var requestPermissions_jni:Dynamic = JNI.createStaticMethod('org/haxe/extension/Tools', 'requestPermissions', '([Ljava/lang/String;I)V');

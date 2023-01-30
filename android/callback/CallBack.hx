@@ -4,7 +4,6 @@ package android.callback;
 #error 'extension-androidtools is not supported on your current platform'
 #end
 import android.callback.CallBackEvent;
-import android.widget.Toast;
 import lime.system.JNI;
 import openfl.events.EventDispatcher;
 import haxe.Json;
@@ -12,11 +11,6 @@ import haxe.Json;
 /**
  * @author Mihai Alexandru (M.A. Jigsaw)
  */
-#if !debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
-@:access(lime.system.JNI)
 class CallBack
 {
 	private static var initialized:Bool = false;
@@ -46,16 +40,22 @@ class CallBack
 		return dispatcher.hasEventListener(type);
 }
 
-private class CallBackHandler
+private class CallBackHandler #if (lime >= "8.0.0") implements JNISafety #end
 {
 	public function new() {}
 
+	#if (lime >= "8.0.0")
+	@:runOnMainThread
+	#end
 	public function onActivityResult(content:String):Void
 	{
 		var daEvent:CallBackEvent = new CallBackEvent(CallBackEvent.ACTIVITY_RESULT, Json.parse(content));		
 		CallBack.dispatchEvent(daEvent);
 	}
 
+	#if (lime >= "8.0.0")
+	@:runOnMainThread
+	#end
 	public function onRequestPermissionsResult(content:String):Void
 	{
 		var daEvent:CallBackEvent = new CallBackEvent(CallBackEvent.REQUEST_PERMISSIONS_RESULT, Json.parse(content));		

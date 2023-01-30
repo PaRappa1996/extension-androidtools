@@ -1,11 +1,13 @@
 package org.haxe.extension;
 
-import android.app.Activity;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.ArrayMap;
@@ -53,86 +55,138 @@ import org.haxe.lime.HaxeObject;
 */
 public class Tools extends Extension {
 
-	public static HaxeObject hobject;
+	//////////////////////////////////////////////////////
 
+	public static final String LOG_TAG = "Tools";
+
+	public static HaxeObject hobject;
 	public static Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+
+	//////////////////////////////////////////////////////
 
 	public static String[] getGrantedPermissions() {
 		List<String> granted = new ArrayList<String>();
 
 		try {
-			PackageInfo packInfo = Extension.mainContext.getPackageManager().getPackageInfo(
-				Extension.mainContext.getPackageName(), PackageManager.GET_PERMISSIONS);
+			PackageInfo info = (PackageInfo) Extension.mainContext.getPackageManager().getPackageInfo(Extension.packageName, PackageManager.GET_PERMISSIONS);
 
-			for (int i = 0; i < packInfo.requestedPermissions.length; i++) {
-				if ((packInfo.requestedPermissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0) {
-					granted.add(packInfo.requestedPermissions[i]);
+			for (int i = 0; i < info.requestedPermissions.length; i++) {
+				if ((info.requestedPermissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0) {
+					granted.add(info.requestedPermissions[i]);
 				}
 			}
 		} catch (Exception e) {
-			Log.e("Tools", e.toString());
+			Log.e(LOG_TAG, e.toString());
 		}
 
 		return granted.toArray(new String[granted.size()]);
 	}
 
 	public static void requestPermissions(final String[] permissions, final int requestCode) {
-		Extension.mainActivity.requestPermissions(permissions, requestCode);
+		try {
+			Extension.mainActivity.requestPermissions(permissions, requestCode);
+		} catch (Exception e) {
+			Log.e(LOG_TAG, e.toString());
+		}
 	}
 
-	public static void makeText(final String message, final int duration) {
+	//////////////////////////////////////////////////////
+
+	public static void makeToastText(final String message, final int duration, final int gravity, final int xOffset, final int yOffset) {
 		Extension.mainActivity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				Toast.makeText(Extension.mainContext, message, duration).show();
+				Toast toast = Toast.makeText(Extension.mainContext, message, duration);
+
+				if (gravity >= 0) {
+					toast.setGravity(gravity, xOffset, yOffset);
+				}
+
+				toast.show();
 			}
 		});
 	}
 
+	//////////////////////////////////////////////////////
+
 	public static void launchPackage(final String packageName, final int requestCode) {
-		Extension.mainActivity.startActivityForResult(Extension.mainActivity.getPackageManager().getLaunchIntentForPackage(packageName), requestCode);
+		try {
+			Intent intent = Extension.mainActivity.getPackageManager().getLaunchIntentForPackage(packageName);
+			Extension.mainActivity.startActivityForResult(intent, requestCode);
+		} catch (Exception e) {
+			Log.e(LOG_TAG, e.toString());
+		}
 	}
 
-	public static void browseFiles(final int requestCode) {
-		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-		intent.setType("*/*");
-		intent.addCategory(Intent.CATEGORY_OPENABLE);
-		Extension.mainActivity.startActivityForResult(Intent.createChooser(intent, null), requestCode);
+	public static void openFileBrowser(final String action, final String type, final int requestCode) {
+		try {
+			Intent intent = new Intent(action);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType(type != null ? type : "*/*");
+			Extension.mainActivity.startActivityForResult(Intent.createChooser(intent, null), requestCode);
+		} catch (Exception e) {
+			Log.e(LOG_TAG, e.toString());
+		}
 	}
+
+	//////////////////////////////////////////////////////
 
 	public static boolean isRooted() {
 		try {
 			// Preform su to get root privledges  
-			Process process = Runtime.getRuntime().exec("su");
-			process.waitFor();
+			Process execute = Runtime.getRuntime().exec("su");
+			execute.waitFor();
 
-			if (process.exitValue() != 255) {
+			if (execute.exitValue() != 255) {
 				return true;
 			}
-		} catch (IOException e) {
-			Log.e("Tools", e.toString());
-		} catch (InterruptedException e) {
-			Log.e("Tools", e.toString());
+		} catch (Exception e) {
+			Log.e(LOG_TAG, e.toString());
 		}
 
 		return false;
 	}
 
+	public static boolean isAndroidTV() {
+		UiModeManager uiModeManager = (UiModeManager) Extension.mainContext.getSystemService(Context.UI_MODE_SERVICE);
+
+		if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+			return true;
+		}
+
+		if (Build.MANUFACTURER.equals("MINIX") && Build.MODEL.equals("NEO-U1")) {
+			return true;
+		}
+
+		if (Build.MANUFACTURER.equals("Amlogic") && Build.MODEL.equals("X96-W")) {
+			return true;
+		}
+
+		return Build.MANUFACTURER.equals("Amlogic") && Build.MODEL.startsWith("TV");
+	}
+
+	public static boolean isChromeBook() {
+		return Extension.mainContext.getPackageManager().hasSystemFeature("org.chromium.arc.device_management");
+	}
+
+	//////////////////////////////////////////////////////
+
 	public static void setBrightness(final float screenBrightness) {
-		WindowManager.LayoutParams attributes = Extension.mainActivity.getWindow().getAttributes();
-		attributes.screenBrightness = screenBrightness;
-		Extension.mainActivity.getWindow().setAttributes(attributes);
+		WindowManager.LayoutParams layout = Extension.mainActivity.getWindow().getAttributes();
+		layout.screenBrightness = screenBrightness;
+		Extension.mainActivity.getWindow().setAttributes(layout);
 	}
 
 	public static float getBrightness() {
-		WindowManager.LayoutParams attributes = Extension.mainActivity.getWindow().getAttributes();
-		return attributes.screenBrightness;
+		WindowManager.LayoutParams layout = Extension.mainActivity.getWindow().getAttributes();
+		return layout.screenBrightness;
 	}
+
+	//////////////////////////////////////////////////////
 
 	public static void vibrate(final int duration, final int period) {
 		Vibrator vibrator = (Vibrator) Extension.mainContext.getSystemService(Context.VIBRATOR_SERVICE);
 
-		// maybe some devices doesn't have a vibrator idk.
 		if (vibrator.hasVibrator()) {
 			if (period == 0) {
 				vibrator.vibrate(duration);
@@ -150,9 +204,7 @@ public class Tools extends Extension {
 		}
 	}
 
-	public static String getStringFromUri(Uri uri) {
-		return uri.toString(); // this is abstract, I can't call this in jni.
-	}
+	//////////////////////////////////////////////////////
 
 	public static File getFilesDir() {
 		return Extension.mainContext.getFilesDir();
@@ -174,31 +226,25 @@ public class Tools extends Extension {
 		return Extension.mainContext.getObbDir();
 	}
 
-	public static Activity getMainActivity() {
-		return Extension.mainActivity;
+	//////////////////////////////////////////////////////
+
+	public static String getStringFromUri(Uri uri) {
+		return uri.toString();
 	}
 
-	public static Context getMainContext() {
-		return Extension.mainContext;
-	}
-
-	public static View getMainView() {
-		return Extension.mainView;
-	}
+	//////////////////////////////////////////////////////
 
 	public static void initCallBack(HaxeObject hobject) {
-		makeText("initCallBack", 1);
-
 		Tools.hobject = hobject;
 	}
 
 	private void callOnHaxe(final String name, final Object[] objects) {
 		if (hobject != null) {
 			hobject.call(name, objects);
-		} else {
-			makeText("hobject is null", 1);
 		}
 	}
+
+	//////////////////////////////////////////////////////
 
 	/**
 	 * Called when an activity you launched exits, giving you the requestCode 
@@ -207,16 +253,16 @@ public class Tools extends Extension {
 	 */
 	@Override
 	public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
-		makeText("onActivityResult", 1);
-
-		ArrayMap<String, Object> intent = new ArrayMap<String, Object>();
-		intent.put("extras", data.getExtras().clone());
-		intent.put("uri", data.getData().toString());
-
 		ArrayMap<String, Object> content = new ArrayMap<String, Object>();
 		content.put("requestCode", requestCode);
 		content.put("resultCode", resultCode);
-		content.put("data", intent);
+
+		if (data != null && data.getData() != null) {
+			ArrayMap<String, Object> d = new ArrayMap<String, Object>();
+			d.put("uri", data.getData().toString());
+			d.put("path", data.getData().getPath());
+			content.put("data", d);
+		}
 
 		callOnHaxe("onActivityResult", new Object[] {
 			gson.toJson(content)
@@ -229,8 +275,6 @@ public class Tools extends Extension {
 	 */
 	@Override
 	public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-		makeText("onRequestPermissionsResult", 1);
-
 		ArrayMap<String, Object> content = new ArrayMap<String, Object>();
 		content.put("requestCode", requestCode);
 		content.put("permissions", permissions);
@@ -241,4 +285,6 @@ public class Tools extends Extension {
 		});
 		return true;
 	}
+
+	//////////////////////////////////////////////////////
 }

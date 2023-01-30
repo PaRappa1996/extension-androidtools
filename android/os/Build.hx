@@ -10,11 +10,6 @@ import lime.system.JNI;
  * 
  * @author Mihai Alexandru (M.A. Jigsaw)
  */
-#if !debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
-@:access(lime.system.JNI)
 class Build
 {
 	public static final TAG:String = 'Build';
@@ -39,8 +34,6 @@ class Build
 	 */
 	public static final DEVICE:String = JNI.createStaticField('android/os/Build', 'DEVICE', 'Ljava/lang/String;').get();
 
-	public static final HOST:String = JNI.createStaticField('android/os/Build', 'HOST', 'Ljava/lang/String;').get();
-
 	/**
 	 * Either a changelist number, or a label like 'M4-rc20'.
 	 */
@@ -60,6 +53,8 @@ class Build
 	 * The end-user-visible name for the end product.
 	 */
 	public static final MODEL:String = JNI.createStaticField('android/os/Build', 'MODEL', 'Ljava/lang/String;').get();
+
+	public static final HOST:String = JNI.createStaticField('android/os/Build', 'HOST', 'Ljava/lang/String;').get();
 
 	public static final USER:String = JNI.createStaticField('android/os/Build', 'USER', 'Ljava/lang/String;').get();
 
